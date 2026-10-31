@@ -18,8 +18,8 @@ Maintain traceable evidence for cloud-engineering decisions, access verification
 
 | ID | Phase / step | Record | Verified outcome | Link |
 | --- | --- | --- | --- | --- |
-| PH0-STEP01 | Phase 0 / 0.1 | Windows tooling, GCP organization/project and billing discovery | CLI/tool versions and resource visibility established | [Phase 0 assessment](00-terraform-bootstrap/README.md) |
-| PH0-STEP02 | Phase 0 / 0.2 | Organization IAM, billing IAM and local ADC validation | Role assignments observed; billing account open; ADC token check passed | [Phase 0 assessment](00-terraform-bootstrap/README.md) |
+| PH0-STEP01 | Phase 0 / 0.1 | Windows tooling, GCP organization/project and billing discovery | CLI/tool versions and resource visibility established | [Step 0.1](00-terraform-bootstrap/STEP-01-ENVIRONMENT-DISCOVERY.md) |
+| PH0-STEP02 | Phase 0 / 0.2 | Organization IAM, billing IAM and local ADC validation | Role assignments observed; billing account open; ADC token check passed | [Step 0.2](00-terraform-bootstrap/STEP-02-IAM-BILLING-ADC.md) |
 | PH0-STEP02-ADC-001 | Phase 0 / 0.2 | OAuth consent screen observation and ADC login | Consent flow documented and local ADC verification recorded | [ADC evidence](00-terraform-bootstrap/evidence/PH0-STEP02-ADC-001.md) |
 
 ## Required evidence fields
