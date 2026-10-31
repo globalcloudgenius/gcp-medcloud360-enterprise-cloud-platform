@@ -1,5 +1,15 @@
 # 02 — Enterprise Architecture and Engineering Standards
 
+| Document control | Value |
+| --- | --- |
+| Document ID | MC360-02 |
+| Version | 1.0 |
+| Owner | MedCloud 360 Engineering |
+| Status | Design / implementation reference |
+| Last updated | 2026-10-31 |
+| Review | Per phase gate and material change |
+
+
 ## Architectural principles
 
 | Standard | Engineering expectation |
@@ -36,3 +46,7 @@ Local ADC supports controlled workstation bootstrap. GitHub Actions must use Wor
 ## Evidence requirements
 
 Record command/version, time, expected outcome, observed result, deviations and follow-up owner. Store sanitized evidence in phase-specific directories and link it from [04 — Engineering Evidence](04-ENGINEERING-EVIDENCE.md).
+
+## Decision and risk governance
+
+Design trade-offs are tracked in [05 — Architecture Decision Register](05-ARCHITECTURE-DECISIONS.md). Open risks and exceptions are recorded in [06 — Risk and Exception Register](06-RISK-REGISTER.md) and reviewed before relevant phase gates.
