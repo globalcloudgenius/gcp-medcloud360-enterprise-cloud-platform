@@ -1,6 +1,6 @@
 # Evidence — Local Google Cloud ADC OAuth Consent
 
-<img width="689" height="365" alt="Local Google Cloud ADC OAuth Consent" src="https://github.com/user-attachments/assets/ea2cf14c-6322-4028-84bf-69aacfd07b2d" />
+**Public evidence:** OAuth consent screen contents are documented below in sanitized form. The original screenshot has been removed from this page because it displayed a personal email address.
 
 
 **Project:** MedCloud 360  
@@ -8,7 +8,7 @@
 **Step:** 0.2 — Organization IAM, Billing and Terraform Authentication Validation  
 **Evidence reference:** PH0-STEP02-ADC-001  
 **Captured date:** 2026-10-31  
-**Evidence classification:** Public, sanitized description  
+**Evidence classification:** Public, sanitized technical record  
 **Evidence source:** Engineer-provided screenshot of the Google Auth Library OAuth consent screen and corresponding Windows PowerShell authentication output
 
 ## Purpose
@@ -50,7 +50,7 @@ if ($LASTEXITCODE -eq 0) {
 
 ## Security notes
 
-- The original screenshot includes a personal account identifier. Keep the original private; only publish a redacted version.
+- The original screenshot contained a personal account identifier and has been removed from the rendered page. A properly redacted image may be attached in a future revision.
 - Do **not** publish the full transient OAuth authorization URL or its state/code challenge query parameters.
 - Do **not** commit the local `application_default_credentials.json`, credentials, access tokens or refresh tokens.
 - The OAuth consent screen is not evidence that broad permissions were actually exercised. Effective access is governed by IAM.
@@ -62,4 +62,4 @@ if ($LASTEXITCODE -eq 0) {
 
 The screenshot illustrates the consent step of the authentication workflow. The PowerShell output is the authoritative evidence of successful credential creation and token acquisition. Project-level quotas, permissions, and Terraform provisioning require separate validation.
 
-> **Image handling:** The original screenshot is held as source evidence outside this public repository; this record does not assert that an image file has been committed. Attach a redacted image to this folder when a supported upload path is available.
+> **Image handling:** The image previously embedded from GitHub user attachments was removed from this document because it showed a personal email address. GitHub attachment storage and prior commit history may retain the original image; removing the Markdown reference does not delete the original attachment.
