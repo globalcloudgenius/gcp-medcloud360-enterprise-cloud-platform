@@ -156,73 +156,82 @@ The following tables present the **actual observed command output** in a review-
 | Credentials and identifiers in raw CLI logs | Unnecessary public disclosure | Publish a redacted summary only; keep original logs private |
 | Terraform state not yet established | Risk of losing state or exposing configuration secrets | Design encrypted, access-restricted, versioned GCS backend with locking and recovery procedures |
 
-### Step 0.2 — IAM, Billing and Terraform Authentication: observed results
+### Step 0.2 — Organization IAM, Billing and Terraform Authentication Validation
 
-| Verification | Observed outcome | Status |
-| --- | --- | --- |
-| Organization IAM | Policy retrieved. Organization Administrator, Project Creator, Project Mover, Service Usage Administrator, Billing Administrator, Billing Creator and Workforce Pool Administrator roles are assigned at organization scope. | Verified role assignments |
-| Billing account lookup using a literal placeholder | INVALID_ARGUMENT returned because the placeholder was not replaced. | Corrected |
-| Billing account description using the actual ID | Account open; USD currency; no parent or master billing account shown. | Verified |
-| Billing IAM using the actual ID | Billing Administrator role assigned directly on the open account. | Verified |
-| Local Terraform ADC | Default credentials not found. | Requires setup |
+**Evidence date:** 2026-10-31  
+**Assessment type:** Organization and billing IAM discovery; local ADC configuration and verification  
+**Result:** Organization and billing role assignments verified; local ADC successfully configured and verified. Provisioning permissions, quota and credits remain subject to review.
 
-**Interpretation:** These results confirm organization and billing role assignments, but not all Terraform bootstrap permissions. Folder creation, service-account administration, effective policy constraints, quotas and credits need additional review. No deployment was performed.
+#### Purpose
 
-#### Reproducible PowerShell commands
+This step establishes which organization and billing roles are granted to the bootstrap administrator and prepares local **Application Default Credentials (ADC)** for the Terraform Google provider. `gcloud` CLI authentication and ADC are separate credential mechanisms.
 
-Run from the VS Code integrated PowerShell terminal. Substitute the relevant IDs locally. IAM outputs can contain private identity information and should not be committed unredacted.
+#### Commands used — Windows PowerShell
+
+The following script reproduces the checks. The organization and billing IDs are read from the operator at run time to avoid publishing resource identifiers. Step 4 changes **local workstation credentials**; all other GCP checks are read-only.
 
 ```powershell
-# Organization IAM (read-only)
-$OrgId = Read-Host "GCP Organization ID"
+# ============================================================
+# MedCloud 360 - Phase 0, Step 0.2
+# IAM, Billing and Terraform Authentication Validation
+# Windows PowerShell / VS Code Integrated Terminal
+# ============================================================
+
+# 1. Organization IAM - output may reveal administrator identities
+$OrgId = Read-Host "Enter GCP organization ID"
 gcloud organizations get-iam-policy $OrgId --format=json
 
-# Billing account status and IAM (read-only)
-$BillingId = Read-Host "Open GCP Billing Account ID"
+# 2. Billing account status and permissions
+$BillingId = Read-Host "Enter OPEN billing account ID"
 gcloud billing accounts describe $BillingId
 gcloud billing accounts get-iam-policy $BillingId --format=json
 
-# Test whether local ADC is configured (token is suppressed)
+# 3. Check local Terraform ADC without displaying the token
 gcloud auth application-default print-access-token 1>$null
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "Local ADC verified"
+    Write-Host "ADC authentication successful"
 } else {
-    Write-Host "Local ADC not available"
+    Write-Host "ADC not configured"
 }
 
-# Configure local ADC for the approved engineering identity
+# 4. Configure local ADC (interactive browser sign-in)
 gcloud auth application-default login
 
-# Verify local ADC again without exposing the token
+# 5. Re-test without displaying the token
 gcloud auth application-default print-access-token 1>$null
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "Local ADC verified"
+    Write-Host "Terraform ADC verified successfully"
 } else {
-    Write-Host "Local ADC verification failed"
+    Write-Host "Terraform ADC verification failed"
 }
 ```
 
-**Status:** Step 0.2 partially validated; ADC setup and remaining provisioning checks pending. GitHub Actions will use Workload Identity Federation rather than local ADC.
+**Command-output hygiene:** Do not commit the OAuth browser authorization URL, session parameters, credential file contents, tokens, full IAM membership, personal account identifiers, or billing IDs. The ADC file remains on the local workstation outside this repository.
 
-### Follow-up actions: Step 0.2 — Authorization, Billing and Authentication Validation
+#### Captured results — verification table
 
-Perform the following **read-only** checks using approved administrator access:
+| Verification | Observed result | Why it matters | Outcome |
+| --- | --- | --- | --- |
+| `gcloud organizations get-iam-policy` | Successful response; seven roles assigned to assessed user | Establishes explicit organization-level IAM assignments | **Verified** |
+| Organization Administrator | `roles/resourcemanager.organizationAdmin` | Organization governance administration | **Assigned** |
+| Project Creator | `roles/resourcemanager.projectCreator` | Project creation capability, subject to effective permissions | **Assigned** |
+| Project Mover | `roles/resourcemanager.projectMover` | Project relocation capability, subject to constraints | **Assigned** |
+| Service Usage Administrator | `roles/serviceusage.serviceUsageAdmin` | Manage service/API enablement within applicable scope | **Assigned** |
+| Billing roles in organization IAM | `roles/billing.admin`, `roles/billing.creator` | Organization-scope billing role assignments observed | **Assigned** |
+| Workforce Pool Administrator | `roles/iam.workforcePoolAdmin` | Workforce identity pool management; not equivalent to Workload Identity Federation administration | **Assigned** |
+| `gcloud billing accounts describe` | Open billing account; currency **USD**; no parent/master account in response | Establishes billing account status | **Verified open** |
+| `gcloud billing accounts get-iam-policy` | `roles/billing.admin` granted on assessed billing account | Establishes direct billing-account administrator assignment | **Verified** |
+| Initial ADC check | `Your default credentials were not found` | Local Terraform credential discovery initially failed | **Initial gap identified** |
+| `gcloud auth application-default login` | Browser login succeeded; local credentials saved; existing sandbox project registered as quota project | Establishes local ADC | **Configured** |
+| Final ADC token test (stdout suppressed) | `Terraform ADC verified successfully` | Confirms ADC can obtain a token without printing it | **Passed** |
 
-```powershell
-# Organization IAM: review privately; output can contain sensitive identities
-gcloud organizations get-iam-policy 246298189177 --format=json
+**Important quota-project detail:** ADC associated an existing sandbox project for API quota attribution. This does not select the Terraform deployment target or prove sufficient budget. Explicitly configure the bootstrap project and evaluate a dedicated quota project before provisioning.
 
-# Open billing account status and IAM: do not publish the account ID or membership
-gcloud billing accounts describe BILLING_ACCOUNT_ID
-gcloud billing accounts get-iam-policy BILLING_ACCOUNT_ID --format=json
+#### Outcome and next control gates
 
-# Terraform ADC presence; never print an access token to a shared terminal/log
-gcloud auth application-default print-access-token 1>$null
-```
+The assigned organization and billing roles and the successful local ADC verification establish a useful administrative baseline. They do **not** independently establish folder creation rights, service-account/Workload Identity Pool administration, all inherited effective permissions, available credits, budget configuration or project quotas.
 
-Also verify available billing credits and applicable quotas using authorized billing views and project/quota tools. Where `get-iam-policy` omits inherited access, use appropriate effective-access or policy troubleshooting checks rather than assuming permissions are absent.
-
-**Step 0.2 exit criteria:** Explicitly establish which identity can create projects/folders, which principal can link billing, what quotas and spending controls apply, and which ADC identity Terraform will use.
+**Remaining:** Validate effective bootstrap provisioning rights, resource/API quotas and financial guardrails; approve seed-project and state-backend architecture; then proceed to Phase 0 Step 0.3. For GitHub Actions, use short-lived **Workload Identity Federation** rather than the local ADC user credential.
 
 ### Next design checkpoint: Step 0.3 — Terraform Bootstrap Architecture
 
