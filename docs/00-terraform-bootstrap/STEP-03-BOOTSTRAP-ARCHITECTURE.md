@@ -1,62 +1,68 @@
-# Phase 0 · Step 0.3 — Enterprise Terraform Bootstrap Design
+# Phase 0 · Step 0.3 — Enterprise Terraform Bootstrap Readiness & Design
 
-**Document:** MC360-PH0-03 · **Version:** 1.1 · **Status:** Design proposed; validation pending · **Date:** 2026-10-31
-
-## Objective and scope
-Approve a **low-cost, secure Terraform foundation** for MedCloud 360 before provisioning the GCP landing zone. Terraform will run **locally in VS Code for initial bootstrap**, use **GCS remote state** after backend creation, and transition to **GitHub Actions with OIDC/Workload Identity Federation (WIF)** for reviewed deployments.
-
-## Target architecture and resources
-```text
-Engineer / VS Code + Terraform + local ADC  ── initial bootstrap
-                         │
-                         ▼
-Dedicated GCP bootstrap project ── GCS state bucket (private, versioned)
-                         ▲
-                         │  authorized state access
-GitHub PR → fmt/validate/scan → plan → approval → apply
-                         │
-                         └── GitHub OIDC → GCP WIF → deployer service account
-                                      │
-                                      └── Governed GCP target projects (later phases)
-```
-
-| Component | Proposed implementation and enterprise control |
+| Document control | Value |
 | --- | --- |
-| GCP project | Dedicated bootstrap project under approved organization/folder; validate unique ID, quota and billing association |
-| State backend | Private GCS bucket; uniform bucket-level access, public access prevention, object versioning, tightly scoped IAM, encryption at rest and recovery procedure |
-| Deployment identities | Human ADC for initial administration; separate least-privilege Terraform service account for automation |
-| CI/CD | GitHub Actions with scoped OIDC/WIF trust, protected branch, required checks and approval before apply; no service-account JSON keys |
-| Governance | Audit logs, resource labels, cost visibility, budget alerts (**not spending caps**), sanitized evidence |
-| Workloads | **None in this step**; landing-zone, VPC, Palo Alto, Azure and data services are delivered in later phases |
+| Document ID | MC360-PH0-03 |
+| Version | 1.2 |
+| Date | 2026-10-31 |
+| Owner | MedCloud 360 Engineering |
+| Status | **Readiness partially verified; design approval pending** |
+| Scope | Read-only GCP assessment and proposed Terraform bootstrap architecture |
 
-## Enterprise deployment sequence (Steps 0.4–0.7)
-1. **Validate** organization permissions, billing access, APIs, quotas, bucket location, costs and allowed GitHub authentication conditions.
-2. **Bootstrap locally:** create the dedicated project and protected state bucket using a controlled initial operation. **Do not configure the GCS backend until the bucket exists.**
-3. **Migrate and verify state:** initialize the GCS backend, migrate initial state where applicable, verify locking/access controls and test recovery. Never commit local or remote state.
-4. **Automate:** configure a dedicated deployer identity, GitHub WIF and PR checks; require human approval for apply and isolate environment state.
-5. **Validate:** test permitted/denied IAM, reproducible plan, audit evidence, budget notifications and rollback/recovery; capture sanitized results.
+## Objective
+Validate the GCP organization, active projects, account permissions, billing and local Terraform authentication before deploying a **dedicated** bootstrap project. Use local Terraform for initial setup, protected **GCS remote state** for ongoing operations, and GitHub Actions with **OIDC/WIF** for controlled automation.
 
-## Non-destructive predeployment checks (PowerShell)
+## Verification results — observed PowerShell output
+
+| Control / test | Verified observation | Status |
+| --- | --- | --- |
+| Terraform / Google Cloud SDK | Terraform v1.15.8; Google Cloud SDK 591.0.0 | **Pass** |
+| GCP organization | One accessible organization listed | **Pass** |
+| Existing projects | **Two ACTIVE projects** listed; neither identified as the MedCloud 360 bootstrap | **Pass — inventory only** |
+| Organization IAM | Direct assignments: `roles/resourcemanager.projectCreator`, `roles/billing.admin`, `roles/serviceusage.serviceUsageAdmin` | **Pass — direct bindings** |
+| Billing account | One **open**, USD-denominated account; direct `roles/billing.admin` assignment on that account | **Pass** |
+| Local Terraform ADC | Access-token acquisition returned success; token not printed | **Pass** |
+| Dedicated bootstrap project | `medcloud360-prj-bootstrap` is a **proposed ID**, not created or checked for availability | **Pending** |
+| Project-creation quota / org policies | Effective quotas and blocking organization constraints not tested | **Pending** |
+| Remote Terraform state / CI/CD | No state bucket, WIF provider or pipeline deployed as part of this step | **Planned** |
+
+> **Interpretation:** Organization-level project-creator and billing roles establish strong initial prerequisites, **not proof that a new project can be created and billed**. The `gcloud projects list` command is an inventory check, not a quota check.
+
+## Proposed deployment architecture
+
+| Component | Enterprise design and guardrails |
+| --- | --- |
+| Bootstrap project | New isolated GCP project under approved organization/folder, associated with approved billing |
+| Terraform execution | VS Code/PowerShell + local ADC for first bootstrap; reviewed automation thereafter |
+| Remote state | Private GCS bucket: uniform access, public access prevention, versioning, restricted IAM, encrypted storage and recovery test |
+| Automation identity | Dedicated least-privilege deployer service account; GitHub OIDC → GCP Workload Identity Federation |
+| CI/CD | Pull request → format/validate/security checks → plan → authorized approval → apply |
+| Governance | Audit logging, separate environment state, budget alerts, documented changes and evidence redaction |
+| Data protection | Synthetic healthcare data only; **no real PII/PHI, credentials, state files or billing IDs** in GitHub |
+
+## Read-only validation commands used
+
 ```powershell
 terraform version
 gcloud version
-gcloud auth list
-gcloud config list
-gcloud organizations list
-gcloud projects list
-gcloud billing accounts list
+gcloud projects list --format="table(projectId,lifecycleState)"
+gcloud organizations get-iam-policy $OrgId --format=json
+gcloud billing accounts list --format=json
+gcloud billing accounts get-iam-policy $BillingId --format=json
 gcloud auth application-default print-access-token 1>$null
-if ($LASTEXITCODE -eq 0) { "ADC token acquisition: PASS" }
-else { "ADC token acquisition: FAIL" }
 ```
-These commands confirm tool availability, resource visibility and local ADC **only**. Do not paste raw identities or billing/project identifiers into public evidence. Neither they nor successful ADC establish authorization to create all proposed resources.
 
-## Design approval / exit criteria
-- [ ] Project placement, account permissions, billing/quota and preliminary cost approved.
-- [ ] Backend security, bootstrap/migration sequence and state recovery reviewed.
-- [ ] Least-privilege CI identity, WIF restrictions and deployment approvals agreed.
-- [ ] No real PII/PHI or credentials in GitHub; synthetic healthcare data only.
-- [ ] Ownership and test/evidence plan accepted.
+The role checks compared policy members against the active account locally; their **boolean results**, not identities or account numbers, are reported above. The final ADC check returned success. The installed `gcloud alpha projects list` command also listed two existing projects; it does **not** validate creation quota.
 
-**Outcome:** Design documented, **not yet approved or deployed**. No provisioning commands run by this document.  
-**Next:** [Step 0.4 — Bootstrap Deployment](STEP-04-BOOTSTRAP-DEPLOYMENT.md) · [Phase 0 Index](README.md) · [Security and privacy controls](../governance/PRIVACY-AND-CONTROL-FRAMEWORKS.md)
+## Design gate and next action
+
+| Required before Step 0.4 | State |
+| --- | --- |
+| Confirm target organization/folder, unique bootstrap project ID and effective creation constraints | **Open** |
+| Confirm project-creation quota, organization policies, billing association permissions and initial costs | **Open** |
+| Approve GCS bootstrap/migration process, identity restrictions, deployment reviews and recovery plan | **Open** |
+| Create bootstrap project, state bucket, CI identity or GitHub workflow | **Not yet executed** |
+
+**Conclusion:** Read-only identity, billing and ADC prerequisites were successfully verified. **Step 0.3 is not yet fully approved, and the bootstrap project has not been created.**
+
+**Next:** [Step 0.4 — Controlled Bootstrap Deployment](STEP-04-BOOTSTRAP-DEPLOYMENT.md) · [Phase 0 Index](README.md) · [Privacy and Control Frameworks](../governance/PRIVACY-AND-CONTROL-FRAMEWORKS.md)
