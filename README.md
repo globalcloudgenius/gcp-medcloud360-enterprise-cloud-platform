@@ -28,14 +28,14 @@ MedCloud 360 is an independent, GCP-first enterprise cloud engineering project d
 
 | Document | Purpose |
 | --- | --- |
-| [01 — Project Charter](docs/01-PROJECT-CHARTER.md) | Scope and business outcomes |
-| [02 — Architecture Standards](docs/02-ARCHITECTURE-STANDARDS.md) | Design and security principles |
-| [03 — Implementation Roadmap](docs/03-IMPLEMENTATION-ROADMAP.md) | Executive phase plan |
-| [04 — Engineering Evidence](docs/04-ENGINEERING-EVIDENCE.md) | Verified results and traceability |
-| [05 — Architecture Decisions](docs/05-ARCHITECTURE-DECISIONS.md) | Proposed design decisions |
-| [06 — Risk Register](docs/06-RISK-REGISTER.md) | Reserved for formal assessment |
+| [01 — Project Charter](docs/governance/PROJECT-CHARTER.md) | Scope and business outcomes |
+| [02 — Architecture Standards](docs/architecture/ARCHITECTURE-STANDARDS.md) | Design and security principles |
+| [03 — Implementation Roadmap](docs/planning/IMPLEMENTATION-ROADMAP.md) | Executive phase plan |
+| [04 — Engineering Evidence](docs/evidence/ENGINEERING-EVIDENCE.md) | Verified results and traceability |
+| [05 — Architecture Decisions](docs/architecture/ARCHITECTURE-DECISIONS.md) | Proposed design decisions |
+| [06 — Risk Register](docs/governance/RISK-REGISTER.md) | Reserved for formal assessment |
 
-**Engineering detail:** [Detailed roadmap and acceptance criteria](docs/PROJECT-ROADMAP.md)
+**Engineering detail:** [Detailed roadmap and acceptance criteria](docs/planning/DETAILED-ROADMAP.md)
 
 ## Implementation progress
 
