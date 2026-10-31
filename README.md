@@ -51,7 +51,7 @@ Additional governance: [05 — Architecture Decisions](docs/05-ARCHITECTURE-DECI
 ## Supporting engineering records
 
 - [Engineering roadmap and acceptance criteria](docs/PROJECT-ROADMAP.md)
-- [Phase 0 — Terraform Bootstrap: assessment and commands](docs/00-terraform-bootstrap/README.md)
+- [Phase 0 — Terraform Bootstrap: seven one-page engineering steps](docs/00-terraform-bootstrap/README.md)
 - [ADC authentication evidence](docs/00-terraform-bootstrap/evidence/PH0-STEP02-ADC-001.md)
 
 ## Delivery standards
