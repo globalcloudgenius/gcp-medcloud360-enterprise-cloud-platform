@@ -1,5 +1,15 @@
 # 03 — Implementation Roadmap
 
+| Document control | Value |
+| --- | --- |
+| Document ID | MC360-03 |
+| Version | 1.0 |
+| Owner | MedCloud 360 Engineering |
+| Status | Design / implementation reference |
+| Last updated | 2026-10-31 |
+| Review | Per phase gate and material change |
+
+
 **Sequence:** Bootstrap → Landing Zone → Network → Palo Alto → Azure → Hybrid → Workloads → Migration → Security & Operations → Analytics → Validation.
 
 | Phase | Engineering scope | Exit evidence |
@@ -19,4 +29,4 @@
 
 **Delivery rule:** Finish the landing-zone, network and firewall acceptance gates before workload cutover. Start migration discovery in parallel.
 
-See [the detailed workstream and acceptance matrix](PROJECT-ROADMAP.md) and [Phase 0 technical records](00-terraform-bootstrap/README.md).
+This numbered document is the **executive phase summary**. See [the detailed technical implementation and acceptance matrix](PROJECT-ROADMAP.md) and [Phase 0 technical records](00-terraform-bootstrap/README.md).
