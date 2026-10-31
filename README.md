@@ -35,7 +35,16 @@
 
 **Delivery sequence:** Bootstrap → Landing zone → Networking → Palo Alto → Azure & hybrid connectivity → Workloads → Migration → Operations → Analytics → Validation.
 
-## Documentation
+## Enterprise documentation
+
+| Document | Purpose |
+| --- | --- |
+| [01 — Project Charter](docs/01-PROJECT-CHARTER.md) | Executive goals, business outcomes and scope |
+| [02 — Architecture Standards](docs/02-ARCHITECTURE-STANDARDS.md) | Security, networking, IaC and engineering controls |
+| [03 — Implementation Roadmap](docs/03-IMPLEMENTATION-ROADMAP.md) | Twelve phases and acceptance gates |
+| [04 — Engineering Evidence](docs/04-ENGINEERING-EVIDENCE.md) | Test records, command results and traceability |
+
+## Supporting engineering records
 
 - [Engineering roadmap and acceptance criteria](docs/PROJECT-ROADMAP.md)
 - [Phase 0 — Terraform Bootstrap: assessment and commands](docs/00-terraform-bootstrap/README.md)
