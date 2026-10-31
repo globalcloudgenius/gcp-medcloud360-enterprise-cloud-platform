@@ -49,3 +49,7 @@ The [Phase 0 folder](docs/00-terraform-bootstrap/README.md) contains **seven sho
 ## Engineering principles
 
 Terraform-managed infrastructure, least-privilege access, reviewed changes, tested controls, operational runbooks and cost governance. This is a **portfolio project**, not an official Vitalant environment. Do not publish credentials, state, personal identifiers or real patient data. Security control mapping does not imply HIPAA certification.
+
+## Privacy and control references
+
+MedCloud 360 models environments that may handle PII/PHI, but processes **synthetic test data only**. See [Privacy & Control Frameworks](docs/governance/PRIVACY-AND-CONTROL-FRAMEWORKS.md) for the HIPAA, NIST, CIS, GCP and Azure reference mappings and their applicability. These are planned controls, not certification claims.
