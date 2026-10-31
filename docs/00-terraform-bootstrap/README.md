@@ -18,7 +18,7 @@
 
 - **[Evidence folder](evidence/PH0-STEP02-ADC-001.md):** ADC authentication record.
 - **[Original detailed assessment](PHASE0-DISCOVERY-AUTHENTICATION-ARCHIVE.md):** preserved Steps 0.1–0.2 command history.
-- **[Project-wide evidence register](../04-ENGINEERING-EVIDENCE.md):** verified results across phases.
+- **[Project-wide evidence register](../evidence/ENGINEERING-EVIDENCE.md):** verified results across phases.
 
 **Review rule:** Mark a step verified only after its acceptance tests are evidenced. Design proposals and planned deployments are not completed work.
 
