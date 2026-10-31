@@ -3,13 +3,17 @@
 
 **Focus:** Google Cloud Platform (GCP) | Microsoft Azure | Terraform | Palo Alto VM-Series | VMware / Proxmox | Cloud Security | Analytics & AI
 
-### Executive overview
+---
+
+## Executive overview
 
 **MedCloud 360** is an independent enterprise cloud engineering reference initiative focused on the architecture, implementation, security, modernization and operational management of mission-critical infrastructure in a regulated healthcare-style setting.
 
 The GCP-first platform integrates Microsoft Azure and on-premises virtualization, uses Terraform and GitHub Actions for repeatable infrastructure delivery, incorporates Palo Alto next-generation firewall inspection for designated traffic paths, and supports highly available applications, protected data services, monitoring, incident response and cloud cost governance. All healthcare-like project data is **synthetic**.
 
-### Project goals
+---
+
+## Project goals
 
 1. **Enterprise cloud foundation:** Establish a governed GCP organization and landing zone with folders, projects, policy guardrails, IAM, centralized logging and cost controls.
 2. **Automation:** Bootstrap Terraform, secured remote state, short-lived federated deployment identity and reviewed CI/CD workflows.
@@ -18,7 +22,9 @@ The GCP-first platform integrates Microsoft Azure and on-premises virtualization
 5. **Operational excellence:** Implement vulnerability remediation, observability, troubleshooting, resilience testing, backup/DR, incident response and FinOps.
 6. **Emerging services:** Establish controlled data analytics and AI infrastructure using synthetic healthcare datasets.
 
-### Implementation roadmap — 12 phases
+---
+
+## Implementation roadmap — 12 phases
 
 | Phase | Implementation | Target result |
 | --- | --- | --- |
@@ -37,7 +43,9 @@ The GCP-first platform integrates Microsoft Azure and on-premises virtualization
 
 **Implementation order:** Terraform bootstrap and landing zone → foundational networking → verified Palo Alto inspection → Azure and hybrid connectivity → workload platform → migration → security/operations → analytics → end-to-end acceptance.
 
-### Expected business and technical outcomes
+---
+
+## Expected business and technical outcomes
 
 - A standardized, Terraform-managed, GCP-first enterprise cloud foundation.
 - Integrated GCP, Azure and on-premises connectivity with documented security boundaries.
@@ -46,14 +54,20 @@ The GCP-first platform integrates Microsoft Azure and on-premises virtualization
 - Repeatable migration practices, monitoring, vulnerability remediation and cost governance.
 - An engineering portfolio of architecture designs, IaC, configuration records, operational runbooks and acceptance evidence.
 
-### Success measures
+---
+
+## Success measures
 
 Delivery is assessed through reproducible infrastructure provisioning; IAM and policy enforcement tests; permitted/denied network flow validation; firewall inspection logging and failover exercises; Azure service and recovery tests; migration and rollback results; security finding remediation; monitoring/incident drills; and measured cost and reliability outcomes.
 
-### Engineering documentation
+---
+
+## Engineering documentation
 
 See **[Implementation Roadmap and Acceptance Gates](docs/PROJECT-ROADMAP.md)** for the detailed work plan, technical deliverables, and validation requirements.
 
-### Scope and data protection
+---
+
+## Scope and data protection
 
 This is an **independent portfolio reference implementation**, not an official Vitalant environment. Architecture and requirements are inspired by enterprise cloud engineering practices, not by access to an employer's private systems. Use synthetic data only. Never commit protected health information, sensitive personal information, credentials, service-account keys, Terraform state, private key material, VPN secrets or other sensitive configuration. Security frameworks inform control design; documentation does not itself establish HIPAA compliance.
