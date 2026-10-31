@@ -1,5 +1,17 @@
 # MedCloud 360 — 12-Phase Engineering Roadmap
 
+| Document control | Value |
+| --- | --- |
+| Document ID | MC360-DETAIL |
+| Version | 1.0 |
+| Owner | MedCloud 360 Engineering |
+| Status | Design / implementation reference |
+| Last updated | 2026-10-31 |
+| Review | Per phase gate and material change |
+
+
+**Document role:** Detailed implementation workstream and acceptance matrix; [03 — Implementation Roadmap](03-IMPLEMENTATION-ROADMAP.md) is the executive summary.
+
 **Objective:** Deliver a secure, automated, GCP-first hybrid cloud platform integrating Azure, on-premises virtualization, Palo Alto inspection, enterprise operations, and analytics.
 
 **Implementation principle:** Establish Terraform, governance, networking and validated inspection **before migration cutover**. Use synthetic healthcare-style data exclusively.
