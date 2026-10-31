@@ -44,6 +44,10 @@
 | [03 — Implementation Roadmap](docs/03-IMPLEMENTATION-ROADMAP.md) | Twelve phases and acceptance gates |
 | [04 — Engineering Evidence](docs/04-ENGINEERING-EVIDENCE.md) | Test records, command results and traceability |
 
+Additional governance: [05 — Architecture Decisions](docs/05-ARCHITECTURE-DECISIONS.md) · [06 — Risk & Exceptions](docs/06-RISK-REGISTER.md)
+
+**Roadmap convention:** [03 — Implementation Roadmap](docs/03-IMPLEMENTATION-ROADMAP.md) is the concise executive summary; [Detailed Engineering Roadmap](docs/PROJECT-ROADMAP.md) contains technical acceptance criteria.
+
 ## Supporting engineering records
 
 - [Engineering roadmap and acceptance criteria](docs/PROJECT-ROADMAP.md)
