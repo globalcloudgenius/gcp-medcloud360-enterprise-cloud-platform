@@ -43,3 +43,7 @@ Work follows [the 12-phase implementation roadmap](../planning/IMPLEMENTATION-RO
 ## Accountability and decision management
 
 The [Architecture Decision Register](../architecture/ARCHITECTURE-DECISIONS.md) records technical trade-offs; the [Risk and Exception Register](RISK-REGISTER.md) tracks unresolved exposure and approval gates. Evidence is linked through [04 — Engineering Evidence](../evidence/ENGINEERING-EVIDENCE.md).
+
+## Sensitive-data scope
+
+The reference role includes PII/PHI infrastructure. This portfolio uses fictional data exclusively. See [Privacy & Control Frameworks](PRIVACY-AND-CONTROL-FRAMEWORKS.md) for selected safeguards and applicability.
