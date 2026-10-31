@@ -14,6 +14,10 @@
 | 0.6 | [CI/CD Security](STEP-06-CICD-SECURITY.md) | Planned |
 | 0.7 | [Validation & Evidence](STEP-07-VALIDATION-EVIDENCE.md) | Planned |
 
+## Access requirements
+
+- [IAM Roles & Permissions Matrix](IAM-ROLES-AND-PERMISSIONS.md) — required access by scope, verified assignments, pending permissions and approval checks.
+
 ## Supporting records
 
 - **[Evidence folder](evidence/PH0-STEP02-ADC-001.md):** ADC authentication record.
