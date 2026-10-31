@@ -233,6 +233,8 @@ The assigned organization and billing roles and the successful local ADC verific
 
 **Remaining:** Validate effective bootstrap provisioning rights, resource/API quotas and financial guardrails; approve seed-project and state-backend architecture; then proceed to Phase 0 Step 0.3. For GitHub Actions, use short-lived **Workload Identity Federation** rather than the local ADC user credential.
 
+**Supporting evidence:** [PH0-STEP02-ADC-001 — Google Auth Library OAuth consent and successful local ADC verification](evidence/PH0-STEP02-ADC-001.md). The evidence record contains sanitized observations; the original screenshot remains private until a redacted image upload is committed.
+
 ### Next design checkpoint: Step 0.3 — Terraform Bootstrap Architecture
 
 Prepare a reviewed design for the seed project, protected GCS state bucket, deployment identities, GitHub Actions OIDC and GCP Workload Identity Federation, least-privilege IAM boundaries, pull-request plans and protected applies. Confirm permissions and cost controls before running Terraform provisioning.
