@@ -156,6 +156,54 @@ The following tables present the **actual observed command output** in a review-
 | Credentials and identifiers in raw CLI logs | Unnecessary public disclosure | Publish a redacted summary only; keep original logs private |
 | Terraform state not yet established | Risk of losing state or exposing configuration secrets | Design encrypted, access-restricted, versioned GCS backend with locking and recovery procedures |
 
+### Step 0.2 — IAM, Billing and Terraform Authentication: observed results
+
+| Verification | Observed outcome | Status |
+| --- | --- | --- |
+| Organization IAM | Policy retrieved. Organization Administrator, Project Creator, Project Mover, Service Usage Administrator, Billing Administrator, Billing Creator and Workforce Pool Administrator roles are assigned at organization scope. | Verified role assignments |
+| Billing account lookup using a literal placeholder | INVALID_ARGUMENT returned because the placeholder was not replaced. | Corrected |
+| Billing account description using the actual ID | Account open; USD currency; no parent or master billing account shown. | Verified |
+| Billing IAM using the actual ID | Billing Administrator role assigned directly on the open account. | Verified |
+| Local Terraform ADC | Default credentials not found. | Requires setup |
+
+**Interpretation:** These results confirm organization and billing role assignments, but not all Terraform bootstrap permissions. Folder creation, service-account administration, effective policy constraints, quotas and credits need additional review. No deployment was performed.
+
+#### Reproducible PowerShell commands
+
+Run from the VS Code integrated PowerShell terminal. Substitute the relevant IDs locally. IAM outputs can contain private identity information and should not be committed unredacted.
+
+```powershell
+# Organization IAM (read-only)
+$OrgId = Read-Host "GCP Organization ID"
+gcloud organizations get-iam-policy $OrgId --format=json
+
+# Billing account status and IAM (read-only)
+$BillingId = Read-Host "Open GCP Billing Account ID"
+gcloud billing accounts describe $BillingId
+gcloud billing accounts get-iam-policy $BillingId --format=json
+
+# Test whether local ADC is configured (token is suppressed)
+gcloud auth application-default print-access-token 1>$null
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "Local ADC verified"
+} else {
+    Write-Host "Local ADC not available"
+}
+
+# Configure local ADC for the approved engineering identity
+gcloud auth application-default login
+
+# Verify local ADC again without exposing the token
+gcloud auth application-default print-access-token 1>$null
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "Local ADC verified"
+} else {
+    Write-Host "Local ADC verification failed"
+}
+```
+
+**Status:** Step 0.2 partially validated; ADC setup and remaining provisioning checks pending. GitHub Actions will use Workload Identity Federation rather than local ADC.
+
 ### Follow-up actions: Step 0.2 — Authorization, Billing and Authentication Validation
 
 Perform the following **read-only** checks using approved administrator access:
