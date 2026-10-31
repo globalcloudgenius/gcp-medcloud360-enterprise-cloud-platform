@@ -1,5 +1,8 @@
 # Evidence — Local Google Cloud ADC OAuth Consent
 
+<img width="689" height="365" alt="Local Google Cloud ADC OAuth Consent" src="https://github.com/user-attachments/assets/ea2cf14c-6322-4028-84bf-69aacfd07b2d" />
+
+
 **Project:** MedCloud 360  
 **Phase:** 0 — Terraform Bootstrap  
 **Step:** 0.2 — Organization IAM, Billing and Terraform Authentication Validation  
