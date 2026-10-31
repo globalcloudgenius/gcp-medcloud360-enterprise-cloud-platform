@@ -14,6 +14,32 @@ The first bootstrap assessment establishes a baseline for the engineering workst
 
 These findings establish **visibility**, not provisioning authorization. They do not establish project/folder creation permissions, billing association rights, active trial credits, available quotas, Terraform Application Default Credentials, or deployment readiness. No resources were created or modified.
 
+### Commands executed — Step 0.1
+
+The following commands were executed from **Windows PowerShell** to capture the initial tooling, authentication-context, organization, project, and billing visibility baseline. These commands are **read-only** and can be rerun by an authorized engineer.
+
+```powershell
+# 1. Local infrastructure tooling
+terraform version
+gcloud version
+git --version
+
+# 2. Active Google Cloud CLI identity and configuration
+gcloud auth list
+gcloud config list
+
+# 3. Discover accessible GCP organization and projects
+gcloud organizations list
+gcloud projects list
+
+# 4. Discover visible billing accounts and status
+gcloud billing accounts list
+```
+
+**Observed results (sanitized):** Terraform 1.15.8; Google Cloud SDK 591.0.0; Git 2.55.0.windows.3; two credentialed CLI accounts with one active; one visible organization; two existing projects; and two visible billing accounts (one open, one closed).
+
+**Evidence interpretation:** The commands establish discoverability and installed versions; they do **not** verify IAM provisioning rights, project billing linkage, credit availability, or Terraform ADC. Redact personal email addresses, detailed project and billing identifiers, and IAM membership from any public terminal captures.
+
 ### Assessment scope and evidence
 
 | Control / check | Command executed | Observation | Assessment |
