@@ -1,5 +1,15 @@
 # 01 — Project Charter
 
+| Document control | Value |
+| --- | --- |
+| Document ID | MC360-01 |
+| Version | 1.0 |
+| Owner | MedCloud 360 Engineering |
+| Status | Design / implementation reference |
+| Last updated | 2026-10-31 |
+| Review | Per phase gate and material change |
+
+
 **Project:** MedCloud 360 — Enterprise GCP-First Hybrid Cloud Platform  
 **Purpose:** Deliver an enterprise-style cloud engineering reference platform for secure healthcare-like workloads using synthetic data.
 
@@ -29,3 +39,7 @@ Establish a governed, repeatable foundation for GCP infrastructure integrated wi
 Work follows [the 12-phase implementation roadmap](03-IMPLEMENTATION-ROADMAP.md) with change review, acceptance gates and evidence links. Architecture decisions and exceptions must be documented before applying changes. Each phase is signed off against its test evidence rather than assumed complete.
 
 **Classification:** Independent public portfolio project. Use synthetic data only.
+
+## Accountability and decision management
+
+The [Architecture Decision Register](05-ARCHITECTURE-DECISIONS.md) records technical trade-offs; the [Risk and Exception Register](06-RISK-REGISTER.md) tracks unresolved exposure and approval gates. Evidence is linked through [04 — Engineering Evidence](04-ENGINEERING-EVIDENCE.md).
