@@ -46,3 +46,7 @@ Maintain traceable evidence for cloud-engineering decisions, access verification
 ## Governance linkage
 
 Evidence supports the phase acceptance gates in [03 — Implementation Roadmap](../planning/IMPLEMENTATION-ROADMAP.md), architecture decisions in [05 — Architecture Decision Register](../architecture/ARCHITECTURE-DECISIONS.md), and risk treatment in [06 — Risk and Exception Register](../governance/RISK-REGISTER.md).
+
+## Privacy and framework evidence
+
+Record planned versus tested controls under [Privacy & Control Frameworks](../governance/PRIVACY-AND-CONTROL-FRAMEWORKS.md). Public artifacts must exclude patient information, identity details, secrets and credentials.
