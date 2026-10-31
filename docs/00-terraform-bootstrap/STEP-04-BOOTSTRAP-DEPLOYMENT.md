@@ -1,23 +1,65 @@
 # Phase 0 · Step 0.4 — Bootstrap Project and State Deployment
 
-**Document:** MC360-PH0-04 · **Status:** Planned; not executed
+| Document control | Value |
+| --- | --- |
+| ID / Version | MC360-PH0-04 / 1.1 |
+| Status | **Proposal reviewed; execution not approved or performed** |
+| Date | 2026-10-31 |
+| Owner | MedCloud 360 Engineering |
+| Approach | Local Terraform + ADC → GCS backend → GitHub Actions OIDC/WIF |
 
 ## Objective
-Provision a dedicated GCP bootstrap project, foundational APIs and a protected Terraform state backend.
 
-## Implementation sequence
-| Order | Activity | Verification |
+Deploy the **minimum secure GCP foundation** for subsequent MedCloud 360 phases. Keep existing GCP projects unchanged. The first deployment is limited to a dedicated bootstrap project, required APIs, a protected state bucket and supporting governance controls; GitHub automation and wider landing-zone infrastructure follow only after initial acceptance.
+
+## Deployment scope
+
+| Resource | Purpose | Security / cost requirement |
 | --- | --- | --- |
-| 1 | Confirm effective project-creation IAM, quotas, organization policies and billing permissions | Access and constraints checked |
-| 2 | Create dedicated bootstrap project and associate approved billing account | Correct project parent and billing |
-| 3 | Enable required APIs (e.g., Cloud Resource Manager, IAM, Service Usage, Cloud Storage where applicable) | API state recorded |
-| 4 | Bootstrap a private, versioned GCS state bucket with restricted IAM and public access prevention | Bucket settings validated |
-| 5 | Initialize Terraform backend and migrate initial state in a controlled operation | `terraform init -migrate-state` succeeds where applicable |
-| 6 | Test state access, locking behavior and recovery, then document budget guardrails | Signed-off test evidence |
+| Dedicated GCP project | Isolate Terraform control plane | Proposed ID `medcloud360-prj-bootstrap`; validate global uniqueness, placement and quota |
+| Project billing association | Permit approved resource creation | Verified open USD billing account; validate effective project billing permissions |
+| Foundational APIs | Enable Resource Manager, IAM, Service Usage, Cloud Storage as required | Only enable APIs necessary for bootstrap |
+| Private GCS state bucket | Store Terraform state centrally | Uniform bucket-level access; public access prevention; versioning; minimal IAM; lifecycle/recovery review |
+| Deployment service account | Terraform automation identity | Least-privilege roles; no service-account key files |
+| Budget/alerts and audit | Cost visibility and accountability | Budget notifications **are not hard caps**; avoid sharing identifiers in GitHub |
+| WIF & GitHub Actions (subsequent step) | Keyless, reviewed deployments | Restrict repository identity, branch/environment, audience and impersonation permissions |
 
-## Controls and constraints
-The state bucket cannot serve as a backend before it exists: provision it using an explicitly controlled bootstrap procedure. Do not delete working state, expose state in GitHub or presume budget alerts prevent all charges. Use explicit project targeting; verify no existing sandbox project is modified.
+## Implementation approach and acceptance evidence
 
-**Exit criteria:** Bootstrap project, secure state and billing configuration validated with sanitized evidence. **Outcome: Pending.**
+| Gate | Planned action | Required evidence |
+| --- | --- | --- |
+| 1 — Readiness | Verify organization/folder placement, creation quota, effective policies, billing association and estimated charges | Redacted check results and go/no-go approval |
+| 2 — Controlled bootstrap | From VS Code/PowerShell, create the project and GCS state bucket using locally authenticated administrative credentials in an approved bootstrap root or controlled seed procedure | Resource names and bucket security checks (identifiers redacted in public files) |
+| 3 — State migration | Add GCS backend after bucket creation; `terraform init -migrate-state` **only if existing state requires migration** | Successful init, bucket-scoped access and state-lock/recovery test |
+| 4 — Identity | Create dedicated deployer service account and scope Terraform/state permissions to required resources | Role assignments and negative-permission checks |
+| 5 — Automation | Configure restricted GitHub OIDC/WIF, PR checks and protected apply approvals in Step 0.6 | CI logs and reviewed plan/apply |
+| 6 — Acceptance | Test repeatable plan, logging, recovery, budget visibility and teardown | Evidence linked in [engineering register](../evidence/ENGINEERING-EVIDENCE.md) |
 
-**Previous:** [Architecture](STEP-03-BOOTSTRAP-ARCHITECTURE.md) · **Next:** [Terraform structure](STEP-05-TERRAFORM-STRUCTURE.md)
+## Commands — non-destructive readiness checks
+
+```powershell
+# Run from VS Code PowerShell. These commands do not create resources.
+terraform version
+gcloud version
+gcloud auth list --filter="status:ACTIVE" --format="table(status)"
+gcloud projects list --format="table(lifecycleState)"
+gcloud billing accounts list --format="table(open,currencyCode)"
+gcloud auth application-default print-access-token 1>$null
+if ($LASTEXITCODE -ne 0) { throw "ADC authentication not ready" }
+```
+
+**Execution prerequisites:** Check project-creation quota and effective organization-policy restrictions separately; the project inventory command is not a quota check. The bootstrap folder and final bucket name must be agreed before deployment. Terraform and Google provider versions will be pinned before the first apply. No `gcloud projects create`, billing linkage, service enablement or `terraform apply` is authorized by this proposal alone.
+
+## Security, approval and rollback
+
+- **Approval:** Confirm project ID, intended parent, billing account, cost ceiling/alerts, temporary admin privileges, bucket location, WIF trust boundaries and reviewer.
+- **Rollback:** If project creation succeeds but state setup fails, preserve any state, inspect resources and billing, then perform a reviewed cleanup. Do not blindly delete state or the project.
+- **Privacy:** No real PII/PHI; synthetic data only. Never commit token output, state files, credential JSON, raw IAM member lists or billing IDs.
+- **Scope boundary:** No Palo Alto appliances, Cloud SQL HA, VMs, VPNs, Azure resources or production workloads in this change.
+
+**Exit criteria:** New project and protected state backend provisioned and verified, with scoped identities, cost controls and sanitized evidence. **Outcome: Not executed.** Deployment remains **no-go** until all preflight checks and approvals pass.
+
+**Related:** [Step 0.3 readiness & design](STEP-03-BOOTSTRAP-ARCHITECTURE.md) · [IAM roles & permissions](IAM-ROLES-AND-PERMISSIONS.md) · [Phase 0 index](README.md)
+
+
+**Next:** [Step 0.5 — Terraform Structure](STEP-05-TERRAFORM-STRUCTURE.md)
