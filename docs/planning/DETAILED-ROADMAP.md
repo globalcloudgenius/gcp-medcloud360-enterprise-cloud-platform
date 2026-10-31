@@ -47,3 +47,7 @@
 - [Authentication evidence record](../00-terraform-bootstrap/evidence/PH0-STEP02-ADC-001.md)
 
 **Repository organization:** Implementation files will be maintained under `terraform/`, `diagrams/`, `paloalto/`, `scripts/`, `tests/` and phase-specific `docs/` folders as resources are introduced.
+
+## Privacy and security evidence
+
+Apply synthetic-data provenance, least-privilege access, encryption, monitoring, vulnerability remediation and secure disposal across relevant phases. See [Privacy & Control Frameworks](../governance/PRIVACY-AND-CONTROL-FRAMEWORKS.md). Framework mapping is project-selected, not a statement of certified compliance.
