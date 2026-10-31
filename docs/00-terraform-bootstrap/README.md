@@ -40,6 +40,49 @@ gcloud billing accounts list
 
 **Evidence interpretation:** The commands establish discoverability and installed versions; they do **not** verify IAM provisioning rights, project billing linkage, credit availability, or Terraform ADC. Redact personal email addresses, detailed project and billing identifiers, and IAM membership from any public terminal captures.
 
+### Captured command results — Step 0.1
+
+The following tables present the **actual observed command output** in a review-friendly format. Sensitive personal identifiers, project IDs, project numbers, and billing account IDs are intentionally redacted from this public repository; original records can be retained privately.
+
+#### A. Local engineering tools
+
+| Command | Observed result | Additional detail | Outcome |
+| --- | --- | --- | --- |
+| `terraform version` | **Terraform v1.15.8** | `windows_amd64`; Terraform reported v1.17.1 as the latest release at the time of execution | Installed; evaluate upgrade |
+| `gcloud version` | **Google Cloud SDK 591.0.0** | `bq 2.1.41`; `core 2026.10.26`; `gcloud-crc32c 1.0.0`; `gsutil 5.38` | Installed |
+| `git --version` | **git version 2.55.0.windows.3** | Windows Git CLI | Installed |
+
+#### B. CLI authentication and configuration
+
+| Command | Output field | Observed result |
+| --- | --- | --- |
+| `gcloud auth list` | Credentialed accounts | **2** (one active; email addresses omitted) |
+| `gcloud config list` | Active configuration | `default` |
+| `gcloud config list` | `core.account` | Active account configured (redacted) |
+| `gcloud config list` | `core.project` | Pre-existing project selected (redacted) |
+| `gcloud config list` | `accessibility.screen_reader` | `False` |
+| `gcloud config list` | `core.disable_usage_reporting` | `True` |
+
+#### C. Organization and project inventory
+
+| Command | Item | Observed result |
+| --- | --- | --- |
+| `gcloud organizations list` | Organization display name | `isaacobaro01-org` |
+| `gcloud organizations list` | Organization ID | Redacted in public report |
+| `gcloud projects list` | Visible projects | **2** |
+| `gcloud projects list` | Project 1 | `My First Project` (project ID and number redacted) |
+| `gcloud projects list` | Project 2 | `My First Project` (project ID and number redacted) |
+| `gcloud projects list` | Environment column | Blank for both entries |
+
+#### D. Billing account visibility
+
+| Command | Billing account | Reported name | `OPEN` |
+| --- | --- | --- | --- |
+| `gcloud billing accounts list` | Account 1 (ID redacted) | `My Billing Account` | `False` |
+| `gcloud billing accounts list` | Account 2 (ID redacted) | `My Billing Account` | `True` |
+
+**Result interpretation:** The CLI discovers an open billing account; it does **not** prove the active identity can associate new projects with that account. The commands also do not establish available credits, quota capacity, organization-level permissions or Terraform Application Default Credentials.
+
 ### Assessment scope and evidence
 
 | Control / check | Command executed | Observation | Assessment |
