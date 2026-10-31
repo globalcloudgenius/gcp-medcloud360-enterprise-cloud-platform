@@ -50,3 +50,7 @@ Record command/version, time, expected outcome, observed result, deviations and 
 ## Decision and risk governance
 
 Design trade-offs are tracked in [05 — Architecture Decision Register](ARCHITECTURE-DECISIONS.md). Open risks and exceptions are recorded in [06 — Risk and Exception Register](../governance/RISK-REGISTER.md) and reviewed before relevant phase gates.
+
+## Privacy and control mapping
+
+Sensitive PII/PHI handling is a job-description design requirement; only synthetic healthcare-style datasets are permitted in this public reference implementation. The [Privacy & Control Frameworks](../governance/PRIVACY-AND-CONTROL-FRAMEWORKS.md) document defines the selected HIPAA safeguard concepts, NIST CSF/SP 800-53, CIS and cloud-provider best-practice mappings, plus evidence requirements. These references are not asserted to be explicit job-description mandates or formal compliance certification.
