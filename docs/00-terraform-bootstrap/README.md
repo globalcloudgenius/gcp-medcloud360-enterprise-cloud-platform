@@ -14,6 +14,36 @@ The first bootstrap assessment establishes a baseline for the engineering workst
 
 These findings establish **visibility**, not provisioning authorization. They do not establish project/folder creation permissions, billing association rights, active trial credits, available quotas, Terraform Application Default Credentials, or deployment readiness. No resources were created or modified.
 
+### Workstation setup — Google Cloud CLI with WinGet and VS Code
+
+Google Cloud CLI was installed on the Windows engineering workstation using **Windows Package Manager (WinGet)**. The environment was then accessed and validated using a **PowerShell terminal in Visual Studio Code (VS Code)**.
+
+The following is the **documented, reproducible installation command** for the WinGet package `Google.CloudSDK` (the precise historical command flags were not captured in the original terminal evidence):
+
+```powershell
+# Run in VS Code > Terminal > New Terminal (PowerShell)
+winget install --id Google.CloudSDK --exact
+```
+
+After installation, restart the VS Code terminal to refresh the PATH, then verify the command-line tools:
+
+```powershell
+gcloud version
+gcloud auth list
+gcloud config list
+```
+
+| Setup item | Method / observation | Verification |
+| --- | --- | --- |
+| Workstation operating system | Windows; PowerShell shell | Observed from the supplied terminal session |
+| Development interface | Visual Studio Code with integrated PowerShell terminal | Workstation workflow reported by the project engineer |
+| Google Cloud CLI installation | Windows Package Manager (WinGet), package ID `Google.CloudSDK` | Installation method reported by the project engineer; exact historical command not captured |
+| Installed SDK | Google Cloud SDK **591.0.0** | Verified by `gcloud version` |
+| Account context | CLI had two credentialed accounts, one active | Verified by `gcloud auth list`; email addresses not published |
+| Active project context | Default configuration pointed at an existing GCP project | Verified by `gcloud config list`; project ID not published |
+
+**Separation of evidence:** The WinGet installation method and VS Code use are project-engineer-reported setup details. The actual SDK version and cloud account/configuration observations are supported by captured terminal output. This distinction avoids presenting an unrecorded installation command as a verbatim executed command.
+
 ### Commands executed — Step 0.1
 
 The following commands were executed from **Windows PowerShell** to capture the initial tooling, authentication-context, organization, project, and billing visibility baseline. These commands are **read-only** and can be rerun by an authorized engineer.
