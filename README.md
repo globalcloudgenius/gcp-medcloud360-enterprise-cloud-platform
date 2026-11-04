@@ -33,6 +33,7 @@ MedCloud 360 is an independent, GCP-first enterprise cloud engineering project d
 | [03 — Implementation Roadmap](docs/planning/IMPLEMENTATION-ROADMAP.md) | Executive phase plan |
 | [04 — Engineering Evidence](docs/evidence/ENGINEERING-EVIDENCE.md) | Verified results and traceability |
 | [05 — Architecture Decisions](docs/architecture/ARCHITECTURE-DECISIONS.md) | Proposed design decisions |
+| [GCP Organization Hierarchy](docs/architecture/GCP-ORGANIZATION-HIERARCHY.md) | Deployed folders, projects, and Terraform bootstrap state |
 | [06 — Risk Register](docs/governance/RISK-REGISTER.md) | Reserved for formal assessment |
 
 **Engineering detail:** [Detailed roadmap and acceptance criteria](docs/planning/DETAILED-ROADMAP.md)
