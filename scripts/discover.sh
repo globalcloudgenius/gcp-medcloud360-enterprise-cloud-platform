@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# -----------------------------------------------------------------------------
+# discover.sh — reads your existing MedCloud360 organization with gcloud and
+# writes config/mc360.tfvars (git-ignored). Nothing in GCP is changed.
+#
+# Usage:  ./scripts/discover.sh            (run from Cloud Shell or a laptop
+#                                            signed in with gcloud as an org admin)
+# Optional overrides: ORG_ID=... GITHUB_REPOSITORY=owner/repo ./scripts/discover.sh
+# -----------------------------------------------------------------------------
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUT="$ROOT/config/mc360.tfvars"
+GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-globalcloudgenius/gcp-medcloud360-enterprise-cloud-platform}"
+
+say()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
+warn() { printf '\033[1;33mWARN:\033[0m %s\n' "$*"; }
+die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
+
+command -v gcloud >/dev/null || die "gcloud is not installed"
+
+ACCOUNT="$(gcloud config get-value account 2>/dev/null)"
+[[ -n "$ACCOUNT" ]] || die "Run 'gcloud auth login' first"
+say "Signed in as $ACCOUNT"
+
+ORG_ID="${ORG_ID:-$(gcloud organizations list --format='value(ID)' --limit=1)}"
+[[ -n "$ORG_ID" ]] || die "No organization visible to $ACCOUNT"
+CUSTOMER_ID="$(gcloud organizations describe "$ORG_ID" --format='value(owner.directoryCustomerId)')"
+ORG_NAME="$(gcloud organizations describe "$ORG_ID" --format='value(displayName)')"
+say "Organization $ORG_NAME ($ORG_ID), customer $CUSTOMER_ID"
+
+# --- Folders, matched by display name ----------------------------------------
+declare -A FOLDER
+while IFS=$'\t' read -r name display; do
+  FOLDER["$display"]="$name"
+done < <(gcloud resource-manager folders list --organization="$ORG_ID" --format='value(name,displayName)')
+
+folder() {
+  local v="${FOLDER[fld-mc360-$1]:-}"
+  [[ -n "$v" ]] || die "Folder fld-mc360-$1 not found under organization $ORG_ID"
+  [[ "$v" == folders/* ]] || v="folders/$v"
+  echo "$v"
+}
+
+# --- Projects ----------------------------------------------------------------
+declare -A PROJECT=(
+  [bootstrap]=mc360-prj-bootstrap [network]=mc360-prj-network [dev]=mc360-prj-dev
+  [test]=mc360-prj-test [observability]=mc360-prj-observability
+  [prod_app]=mc360-prj-prod-app [prod_data]=mc360-prj-prod-data
+)
+for k in "${!PROJECT[@]}"; do
+  gcloud projects describe "${PROJECT[$k]}" --format='value(projectId)' >/dev/null 2>&1 \
+    || die "Project ${PROJECT[$k]} not found or not visible"
+done
+say "All 7 projects found"
+
+BILLING="$(gcloud billing projects describe "${PROJECT[bootstrap]}" --format='value(billingAccountName)' | sed 's#billingAccounts/##')"
+[[ -n "$BILLING" ]] || die "Billing is not enabled on ${PROJECT[bootstrap]}"
+for k in "${!PROJECT[@]}"; do
+  b="$(gcloud billing projects describe "${PROJECT[$k]}" --format='value(billingEnabled)')"
+  [[ "$b" == "True" ]] || warn "Billing is not enabled on ${PROJECT[$k]} — link it: gcloud billing projects link ${PROJECT[$k]} --billing-account=$BILLING"
+done
+
+# --- State bucket ------------------------------------------------------------
+STATE_BUCKET="$(gcloud storage buckets list --project="${PROJECT[bootstrap]}" --format='value(name)' 2>/dev/null | grep -m1 tfstate || true)"
+CREATE_STATE=false
+if [[ -z "$STATE_BUCKET" ]]; then
+  BOOT_NUM="$(gcloud projects describe "${PROJECT[bootstrap]}" --format='value(projectNumber)')"
+  STATE_BUCKET="mc360-bootstrap-tfstate-$BOOT_NUM"
+  CREATE_STATE=true
+  say "No state bucket found — stage 00 will create gs://$STATE_BUCKET"
+else
+  say "Using existing state bucket gs://$STATE_BUCKET"
+fi
+
+# --- Identity / domain restriction --------------------------------------------
+DOMAIN="${ACCOUNT#*@}"
+DOMAIN_RESTRICT=true
+case "$DOMAIN" in
+  gmail.com|googlemail.com)
+    DOMAIN_RESTRICT=false
+    warn "You are signed in with a consumer account ($ACCOUNT)."
+    warn "Domain-restricted sharing is turned OFF so IAP and admin grants to this account keep working."
+    warn "For the full control, sign in with an account in your Cloud Identity domain and re-run."
+    ;;
+esac
+
+# --- Access Context Manager (one org-level policy per organization) -----------
+ACCESS_POLICY="$(gcloud access-context-manager policies list --organization="$ORG_ID" --format='value(name)' 2>/dev/null | head -1 | sed 's#.*/##' || true)"
+[[ -n "$ACCESS_POLICY" ]] && say "Reusing access policy $ACCESS_POLICY for VPC Service Controls"
+
+# --- Pre-flight checks ---------------------------------------------------------
+NETS="$(gcloud compute networks list --project="${PROJECT[network]}" --format='value(name)' 2>/dev/null || true)"
+if grep -qx default <<<"$NETS"; then
+  warn "mc360-prj-network still has the 'default' VPC. It uses one of your VPC quota slots."
+  warn "Delete it before stage 02:  gcloud compute networks delete default --project=${PROJECT[network]} (delete its firewall rules first)"
+fi
+
+cat >"$OUT" <<EOF
+# Generated by scripts/discover.sh on $(date -u +%Y-%m-%dT%H:%MZ) — git-ignored, never commit.
+org_id          = "$ORG_ID"
+customer_id     = "$CUSTOMER_ID"
+org_domain      = "$DOMAIN"
+billing_account = "$BILLING"
+
+region    = "us-central1"
+dr_region = "us-east4"
+
+folders = {
+  bootstrap  = "$(folder bootstrap)"
+  networking = "$(folder networking)"
+  nonprod    = "$(folder nonprod)"
+  platform   = "$(folder platform)"
+  prod       = "$(folder prod)"
+  sandbox    = "$(folder sandbox)"
+}
+
+projects = {
+  bootstrap     = "${PROJECT[bootstrap]}"
+  network       = "${PROJECT[network]}"
+  dev           = "${PROJECT[dev]}"
+  test          = "${PROJECT[test]}"
+  observability = "${PROJECT[observability]}"
+  prod_app      = "${PROJECT[prod_app]}"
+  prod_data     = "${PROJECT[prod_data]}"
+}
+
+state_bucket        = "$STATE_BUCKET"
+create_state_bucket = $CREATE_STATE
+
+github_repository = "$GITHUB_REPOSITORY"
+
+admin_members = ["user:$ACCOUNT"]
+iap_members   = ["user:$ACCOUNT"]
+alert_email   = "$ACCOUNT"
+
+enable_domain_restriction   = $DOMAIN_RESTRICT
+enforce_cmek                = false
+vpcsc_dry_run               = true
+enable_hl7_gateway          = true
+enable_portal_lb            = true
+enable_dr_region            = true
+enable_hybrid_vpn           = false
+enable_binary_authorization = false
+enable_windows              = false
+
+portal_domain      = ""
+monthly_budget_usd = 10
+access_policy_id   = "$ACCESS_POLICY"
+EOF
+
+say "Wrote $OUT"
+say "Next:  ./scripts/deploy-all.sh"

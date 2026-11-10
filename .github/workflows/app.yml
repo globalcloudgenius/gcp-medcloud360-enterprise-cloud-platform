@@ -1,0 +1,61 @@
+# CareNotes application pipeline: test -> build -> scan -> push -> deploy by digest.
+name: app
+
+on:
+  push:
+    branches: [main]
+    paths: ["app/carenotes/**", ".github/workflows/app.yml"]
+  pull_request:
+    paths: ["app/carenotes/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -r app/carenotes/requirements.txt -r app/hl7-gateway/requirements.txt httpx pytest
+      - name: Unit + MLLP/TLS integration tests
+        run: pytest -q app/tests
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-deploy:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_APP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Write config
+        env:
+          MC360_TFVARS: ${{ secrets.MC360_TFVARS }}
+        run: printf '%s\n' "$MC360_TFVARS" > config/mc360.tfvars
+      - name: Build image
+        run: docker build -t carenotes:${{ github.sha }} app/carenotes
+      - name: Trivy image scan (fail on fixable CRITICAL)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: carenotes:${{ github.sha }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+      - name: Push and deploy by digest
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: ./scripts/deploy-app.sh

@@ -1,0 +1,133 @@
+# Terraform pipeline: static checks + plan on every PR, approved apply per stage.
+# Auth: Workload Identity Federation (no keys). Plan = mc360-tf-plan (read-only),
+# apply = mc360-tf-apply, only from the protected "production" environment.
+name: terraform
+
+on:
+  pull_request:
+    paths: ["terraform/**", "app/hl7-gateway/**", ".github/workflows/terraform.yml"]
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: "Stage to run"
+        required: true
+        type: choice
+        options: [01-org, 02-network, 03-security, 04-data, 05-compute, 06-app, 07-perimeter, 08-observability]
+      action:
+        description: "plan or apply"
+        required: true
+        type: choice
+        options: [plan, apply]
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+env:
+  TF_VERSION: "1.9.8"
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  static:
+    name: fmt · validate · tflint · checkov
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - name: Common files are in sync
+        run: ./scripts/sync-common.sh --check
+      - name: terraform fmt
+        run: terraform fmt -check -recursive terraform
+      - name: terraform validate + offline plan tests (mocked providers, every stage)
+        run: |
+          for d in terraform/[0-9][0-9]-*/; do
+            echo "::group::$d"
+            terraform -chdir="$d" init -backend=false -input=false >/dev/null
+            terraform -chdir="$d" validate
+            terraform -chdir="$d" test -var-file=../tests/mock.tfvars
+            echo "::endgroup::"
+          done
+      - uses: terraform-linters/setup-tflint@v4
+      - name: tflint
+        run: |
+          tflint --init
+          for d in terraform/[0-9][0-9]-*/; do tflint --chdir="$d" --minimum-failure-severity=error; done
+      - name: Checkov (report only)
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: terraform
+          framework: terraform
+          soft_fail: true
+          quiet: true
+
+  plan:
+    name: plan ${{ matrix.stage }}
+    if: github.event_name == 'pull_request' || inputs.action == 'plan'
+    needs: static
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        stage: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', inputs.stage)) || fromJSON('["01-org","02-network","03-security","04-data","05-compute","06-app","07-perimeter","08-observability"]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_PLAN_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Write config
+        env:
+          MC360_TFVARS: ${{ secrets.MC360_TFVARS }}
+        run: printf '%s\n' "$MC360_TFVARS" > config/mc360.tfvars
+      - name: terraform plan
+        id: plan
+        run: |
+          ./scripts/tf.sh "${{ matrix.stage }}" plan -no-color -lock=false | tee plan.txt
+      - name: Comment plan on the PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const out = fs.readFileSync('plan.txt', 'utf8');
+            const summary = (out.match(/Plan: .*|No changes\..*/) || ['(see logs)'])[0];
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
+              body: `### terraform plan · \`${{ matrix.stage }}\`\n**${summary}**\n<details><summary>Full plan</summary>\n\n\`\`\`\n${out.slice(-60000)}\n\`\`\`\n</details>`
+            });
+
+  apply:
+    name: apply ${{ inputs.stage }}
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'apply'
+    needs: static
+    runs-on: ubuntu-latest
+    environment: production # required reviewer; WIF only trusts this environment for the apply identity
+    concurrency: terraform-${{ inputs.stage }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_APPLY_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Write config
+        env:
+          MC360_TFVARS: ${{ secrets.MC360_TFVARS }}
+        run: printf '%s\n' "$MC360_TFVARS" > config/mc360.tfvars
+      - name: plan (saved)
+        run: ./scripts/tf.sh "${{ inputs.stage }}" plan -no-color
+      - name: apply the saved plan
+        env:
+          USE_SAVED_PLAN: "true"
+        run: ./scripts/tf.sh "${{ inputs.stage }}" apply

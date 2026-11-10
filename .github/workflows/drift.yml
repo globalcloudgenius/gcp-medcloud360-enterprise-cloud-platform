@@ -1,0 +1,52 @@
+# Nightly drift detection: plans every stage; opens an issue if reality differs from code.
+name: drift
+
+on:
+  schedule:
+    - cron: "30 13 * * *" # 06:30 Phoenix
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        stage: [01-org, 02-network, 03-security, 04-data, 05-compute, 06-app, 07-perimeter, 08-observability]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_PLAN_SA }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Write config
+        env:
+          MC360_TFVARS: ${{ secrets.MC360_TFVARS }}
+        run: printf '%s\n' "$MC360_TFVARS" > config/mc360.tfvars
+      - name: Plan with detailed exit code
+        id: plan
+        run: |
+          set +e
+          ./scripts/tf.sh "${{ matrix.stage }}" plan -no-color -lock=false -detailed-exitcode > plan.txt 2>&1
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          tail -40 plan.txt
+          [ "$code" = "1" ] && exit 1 || exit 0
+      - name: Open drift issue
+        if: steps.plan.outputs.code == '2'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --label drift --title "Drift detected in ${{ matrix.stage }} ($(date -u +%F))" \
+            --body "$(printf 'Nightly plan found changes made outside Terraform.\n\n```\n%s\n```' "$(grep -E '^(  [#~+-]|Plan:)' plan.txt | head -80)")" \
+            || gh issue create --title "Drift detected in ${{ matrix.stage }}" --body "See workflow run ${{ github.run_id }}"

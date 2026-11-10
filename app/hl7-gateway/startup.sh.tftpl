@@ -1,0 +1,68 @@
+#!/bin/bash
+# MedCloud360 HL7 gateway bootstrap (rendered by Terraform, stage 05).
+set -euo pipefail
+exec > >(logger -t mc360-startup) 2>&1
+
+PROJECT="${project}"
+TOPIC="${topic}"
+
+install -d -m 0755 /opt/mc360 /etc/mc360/tls
+
+# 1. Ops Agent (metrics + logs to Cloud Monitoring/Logging)
+if ! systemctl is-active --quiet google-cloud-ops-agent; then
+  curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+  bash add-google-cloud-ops-agent-repo.sh --also-install
+fi
+
+# 2. Runtime
+export DEBIAN_FRONTEND=noninteractive
+apt-get update -y
+apt-get install -y python3-venv unattended-upgrades
+[ -d /opt/mc360/venv ] || python3 -m venv /opt/mc360/venv
+/opt/mc360/venv/bin/pip install --quiet --upgrade "google-cloud-pubsub>=2.21,<3"
+
+# 3. Gateway code and TLS material from Secret Manager (never baked into images)
+curl -sf -H "Metadata-Flavor: Google" \
+  "http://metadata.google.internal/computeMetadata/v1/instance/attributes/mllp-gateway-py" \
+  -o /opt/mc360/mllp_gateway.py
+gcloud secrets versions access latest --secret=hl7-tls-cert --project="$PROJECT" > /etc/mc360/tls/server.crt
+gcloud secrets versions access latest --secret=hl7-tls-key  --project="$PROJECT" > /etc/mc360/tls/server.key
+chmod 0600 /etc/mc360/tls/server.key
+
+# 4. Patch hooks used by the VM Manager patch deployment (drain, then verify)
+cat > /opt/mc360/pre-patch.sh <<'PRE'
+#!/bin/bash
+systemctl stop mllp-gateway || true
+exit 0
+PRE
+cat > /opt/mc360/post-patch.sh <<'POST'
+#!/bin/bash
+systemctl start mllp-gateway
+sleep 5
+timeout 5 bash -c '</dev/tcp/127.0.0.1/2575' && exit 0 || exit 1
+POST
+chmod 0755 /opt/mc360/pre-patch.sh /opt/mc360/post-patch.sh
+
+# 5. Service
+cat > /etc/systemd/system/mllp-gateway.service <<UNIT
+[Unit]
+Description=MedCloud360 HL7 MLLP/TLS gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Environment=HL7_TOPIC=$TOPIC
+Environment=MLLP_PORT=2575
+ExecStart=/opt/mc360/venv/bin/python /opt/mc360/mllp_gateway.py
+Restart=always
+RestartSec=3
+User=root
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable --now mllp-gateway
+systemctl restart mllp-gateway
