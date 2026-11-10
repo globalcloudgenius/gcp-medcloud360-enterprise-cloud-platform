@@ -51,7 +51,11 @@ jobs:
             echo "::endgroup::"
           done
       - uses: terraform-linters/setup-tflint@v4
+        with:
+          github_token: ${{ github.token }}
       - name: tflint
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           tflint --init
           for d in terraform/[0-9][0-9]-*/; do tflint --chdir="$d" --minimum-failure-severity=error; done
@@ -65,7 +69,7 @@ jobs:
 
   plan:
     name: plan ${{ matrix.stage }}
-    if: github.event_name == 'pull_request' || inputs.action == 'plan'
+    if: (github.event_name == 'pull_request' || inputs.action == 'plan') && vars.GCP_WIF_PROVIDER != ''
     needs: static
     runs-on: ubuntu-latest
     strategy:
@@ -106,7 +110,7 @@ jobs:
 
   apply:
     name: apply ${{ inputs.stage }}
-    if: github.event_name == 'workflow_dispatch' && inputs.action == 'apply'
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'apply' && vars.GCP_WIF_PROVIDER != ''
     needs: static
     runs-on: ubuntu-latest
     environment: production # required reviewer; WIF only trusts this environment for the apply identity

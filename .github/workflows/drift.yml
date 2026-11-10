@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   drift:
+    if: vars.GCP_WIF_PROVIDER != ''
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

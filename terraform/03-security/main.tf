@@ -176,7 +176,7 @@ resource "tls_private_key" "hl7" {
 }
 
 resource "tls_cert_request" "hl7" {
-  private_key_pem = tls_private_key.hl7.private_key_pem
+  private_key_pem = tls_private_key.hl7.private_key_pem # gitleaks:allow (Terraform reference, generated at apply)
   dns_names       = ["hl7.mc360.internal"]
   ip_addresses    = ["10.42.0.10"]
 
@@ -197,7 +197,7 @@ resource "tls_locally_signed_cert" "hl7" {
 locals {
   secrets = {
     hl7-tls-cert = tls_locally_signed_cert.hl7.cert_pem
-    hl7-tls-key  = tls_private_key.hl7.private_key_pem
+    hl7-tls-key  = tls_private_key.hl7.private_key_pem # gitleaks:allow (Terraform reference, generated at apply)
     hl7-ca-cert  = tls_self_signed_cert.ca.cert_pem
   }
 }

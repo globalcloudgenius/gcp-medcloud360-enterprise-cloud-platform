@@ -31,7 +31,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-deploy:
-    if: github.event_name != 'pull_request'
+    # Runs only after GCP is deployed and the repository is wired (./scripts/tf.sh 00-bootstrap output github_setup_commands).
+    if: github.event_name != 'pull_request' && vars.GCP_WIF_PROVIDER != ''
     needs: test
     runs-on: ubuntu-latest
     environment: production
